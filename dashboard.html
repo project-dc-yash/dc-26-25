@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Controlled Wheelchair OS</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: #05070a;
+            color: #fff;
+            font-family: 'Arial Black', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+        }
+
+        /* Large Header */
+        .header h1 {
+            color: #00d2ff;
+            font-size: 3.5rem;
+            text-transform: uppercase;
+            margin: 30px 0;
+            text-shadow: 0 0 20px #00d2ff;
+            text-align: center;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 30px;
+            width: 100%;
+            max-width: 1500px;
+        }
+
+        /* Control Panel with Joystick */
+        .control-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 30px;
+            padding: 40px;
+            border: 2px solid #00d2ff;
+            text-align: center;
+        }
+
+        .joystick-base {
+            width: 250px;
+            height: 250px;
+            background: #1a1a1a;
+            border-radius: 50%;
+            margin: 0 auto 30px;
+            position: relative;
+            border: 5px solid #333;
+            touch-action: none;
+        }
+
+        #knob {
+            width: 80px;
+            height: 80px;
+            background: #00d2ff;
+            border-radius: 50%;
+            position: absolute;
+            left: 85px; top: 85px;
+            box-shadow: 0 0 30px #00d2ff;
+            transition: 0.1s;
+        }
+
+        /* Huge Action Buttons */
+        .btn {
+            width: 100%;
+            padding: 25px;
+            margin-top: 20px;
+            border-radius: 20px;
+            font-size: 2rem;
+            font-weight: 900;
+            cursor: pointer;
+            text-transform: uppercase;
+            border: none;
+        }
+
+        .btn-voice { background: #ff4757; color: white; box-shadow: 0 10px 0 #b33939; }
+        .btn-google { background: #2ed573; color: white; box-shadow: 0 10px 0 #218c74; }
+
+        /* Massive Sensor Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+        }
+
+        .card {
+            background: #111;
+            padding: 40px;
+            border-radius: 30px;
+            border-left: 20px solid #00d2ff;
+        }
+
+        .label { 
+            color: #00d2ff; 
+            font-size: 1.8rem; 
+            text-transform: uppercase; 
+            margin-bottom: 10px;
+        }
+
+        .value { 
+            font-size: 6rem; /* Massive value text */
+            font-weight: 900; 
+            line-height: 1;
+        }
+
+        .unit { font-size: 2.5rem; color: #888; margin-left: 15px; }
+
+        .pulse { animation: beat 0.8s infinite; color: #ff4757; display: inline-block; }
+        @keyframes beat {
+            0% { transform: scale(1); }
+            20% { transform: scale(1.1); }
+            40% { transform: scale(1); }
+        }
+
+        #loc-text { font-size: 2.5rem; color: #2ed573; word-break: break-all; }
+        #status { font-size: 1.5rem; color: #ffca28; margin-top: 15px; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Voice Controlled Wheelchair</h1>
+    </div>
+
+    <div class="main-container">
+        <div class="control-panel">
+            <div class="joystick-base" id="base">
+                <div id="knob"></div>
+            </div>
+            <button class="btn btn-voice" onclick="startVoice()">🎤 Voice Control</button>
+            <button class="btn btn-google" onclick="window.open('https://www.google.com','_blank')">🌐 Open Google</button>
+            <p id="status">System Online: Waiting for Command</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="card" style="border-color: #ff4757;">
+                <div class="label">Heartbeat</div>
+                <div class="value"><span id="heart-val" class="pulse">72</span> <span class="unit">BPM</span></div>
+            </div>
+
+            <div class="card" style="border-color: #ffa502;">
+                <div class="label">Blood Pressure</div>
+                <div class="value"><span id="bp-val">120/80</span> <span class="unit">mmHg</span></div>
+            </div>
+
+            <div class="card" style="border-color: #2ed573;">
+                <div class="label">Battery Health</div>
+                <div class="value"><span id="batt-val">98</span> <span class="unit">%</span></div>
+            </div>
+
+            <div class="card" style="border-color: #00d2ff;">
+                <div class="label">Live Location</div>
+                <div id="loc-text">Lat: -- / Lon: --</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. SENSOR SIMULATION (Changes every 2 seconds) ---
+        function updateSensors() {
+            // Heartbeat: Normal 70-80
+            const heart = Math.floor(Math.random() * (80 - 70 + 1)) + 70;
+            document.getElementById('heart-val').innerText = heart;
+
+            // BP: Normal 118/78 to 122/82
+            const sys = Math.floor(Math.random() * (122 - 118 + 1)) + 118;
+            const dia = Math.floor(Math.random() * (82 - 78 + 1)) + 78;
+            document.getElementById('bp-val').innerText = sys + "/" + dia;
+
+            // Battery: Very slow drain simulation
+            let batt = parseInt(document.getElementById('batt-val').innerText);
+            if(Math.random() > 0.98 && batt > 5) {
+                document.getElementById('batt-val').innerText = batt - 1;
+            }
+        }
+        setInterval(updateSensors, 2000);
+
+        // --- 2. JOYSTICK CONTROL ---
+        const knob = document.getElementById('knob');
+        const base = document.getElementById('base');
+        let dragging = false;
+
+        const handleStart = () => dragging = true;
+        const handleEnd = () => {
+            dragging = false;
+            knob.style.left = '85px';
+            knob.style.top = '85px';
+        };
+        const handleMove = (e) => {
+            if (!dragging) return;
+            const rect = base.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            let x = clientX - rect.left - 40;
+            let y = clientY - rect.top - 40;
+            x = Math.max(0, Math.min(170, x));
+            y = Math.max(0, Math.min(170, y));
+            knob.style.left = x + 'px';
+            knob.style.top = y + 'px';
+        };
+
+        base.addEventListener('mousedown', handleStart);
+        base.addEventListener('touchstart', handleStart);
+        window.addEventListener('mouseup', handleEnd);
+        window.addEventListener('touchend', handleEnd);
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('touchmove', handleMove);
+
+        // --- 3. GPS TRACKING ---
+        function trackLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.watchPosition((pos) => {
+                    document.getElementById('loc-text').innerText = 
+                        pos.coords.latitude.toFixed(4) + " / " + pos.coords.longitude.toFixed(4);
+                }, () => {
+                    document.getElementById('loc-text').innerText = "GPS Offline";
+                });
+            }
+        }
+        trackLocation();
+
+        // --- 4. VOICE CONTROL ---
+        function startVoice() {
+            const status = document.getElementById('status');
+            window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (window.SpeechRecognition) {
+                const rec = new SpeechRecognition();
+                rec.start();
+                status.innerText = "🎤 LISTENING...";
+                status.style.color = "#2ed573";
+                
+                rec.onresult = (e) => {
+                    const cmd = e.results[0][0].transcript.toLowerCase();
+                    status.innerText = "COMMAND: " + cmd.toUpperCase();
+                    if(cmd.includes('google')) window.open('https://www.google.com','_blank');
+                };
+            } else {
+                alert("Browser not supported. Use Chrome.");
+            }
+        }
+    </script>
+</body>
+</html>
